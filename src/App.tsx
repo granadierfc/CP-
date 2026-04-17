@@ -15,8 +15,12 @@ import {
 } from "./data/content";
 
 const filters = ["All", "passing", "failing", "draft"] as const;
+const views = ["Library", "Notes", "Problems", "Deploy"] as const;
+
+type View = (typeof views)[number];
 
 export default function App() {
+  const [activeView, setActiveView] = useState<View>("Library");
   const [activeStatus, setActiveStatus] = useState<(typeof filters)[number]>("All");
   const [activeCategory, setActiveCategory] = useState("All");
   const [libraryQuery, setLibraryQuery] = useState("");
@@ -36,100 +40,68 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <nav className="top-nav">
-        <a href="#overview">Overview</a>
-        <a href="#library">Library</a>
-        <a href="#vault">Vault</a>
-        <a href="#journal">Journal</a>
-        <a href="#deploy">Deploy</a>
-      </nav>
-
-      <header className="hero">
-        <div className="hero__copy">
-          <p className="eyebrow">Competitive Programming OS</p>
-          <h1>One place for your implementations, proofs, ideas, and battle scars.</h1>
-          <p className="hero__body">
-            A polished personal hub inspired by verification-first CP libraries, but expanded into a
-            real knowledge system: tested templates, scattered insights, notes, references, and memorable
-            problems all living together.
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">Competitive Programming Workspace</p>
+          <h1>CP Knowledge Hub</h1>
+          <p className="app-header__body">
+            A quieter personal system for library code, notes, solved problems, and deployment.
           </p>
-          <div className="hero__cta-row">
-            <a className="button button--primary" href="#library">
-              Explore library
-            </a>
-            <a className="button button--ghost" href="#vault">
-              Open notes vault
-            </a>
-          </div>
         </div>
-
-        <div className="hero__panel">
-          <div className="metric-grid">
-            <article>
-              <span>Verified</span>
-              <strong>{statusSummary.passing}</strong>
-            </article>
-            <article>
-              <span>Broken</span>
-              <strong>{statusSummary.failing}</strong>
-            </article>
-            <article>
-              <span>Drafting</span>
-              <strong>{statusSummary.draft}</strong>
-            </article>
-            <article>
-              <span>Notes</span>
-              <strong>{notes.length}</strong>
-            </article>
-          </div>
-          <div className="hero__callout">
-            <p>What makes this useful</p>
-            <ul>
-              <li>Verification status attached to implementations</li>
-              <li>Markdown, LaTeX, or PDF notes in one vault</li>
-              <li>Problem writeups with reusable patterns</li>
-            </ul>
-          </div>
+        <div className="summary-strip">
+          <article>
+            <span>Passing</span>
+            <strong>{statusSummary.passing}</strong>
+          </article>
+          <article>
+            <span>Failing</span>
+            <strong>{statusSummary.failing}</strong>
+          </article>
+          <article>
+            <span>Drafts</span>
+            <strong>{statusSummary.draft}</strong>
+          </article>
+          <article>
+            <span>Notes</span>
+            <strong>{notes.length}</strong>
+          </article>
         </div>
       </header>
 
-      <main className="page-grid" id="overview">
-        <SectionCard
-          eyebrow="Overview"
-          title="Command center"
-          subtitle="A quick pulse-check on the state of your CP ecosystem."
-        >
-          <div className="overview-grid">
-            <article>
-              <h3>Implementation health</h3>
-              <p>Surface what is safe to reuse during a contest and what still needs repair.</p>
-            </article>
-            <article>
-              <h3>Knowledge capture</h3>
-              <p>Keep fleeting ideas, editorials, and technique notes from drifting into random folders.</p>
-            </article>
-            <article>
-              <h3>Learning archive</h3>
-              <p>Store cool problems and the exact pattern or invariant each one taught you.</p>
-            </article>
-          </div>
-        </SectionCard>
+      <nav className="view-switcher" aria-label="Workspace sections">
+        {views.map((view) => (
+          <button
+            key={view}
+            type="button"
+            className={view === activeView ? "view-switcher__tab view-switcher__tab--active" : "view-switcher__tab"}
+            onClick={() => setActiveView(view)}
+          >
+            {view}
+          </button>
+        ))}
+      </nav>
 
-        <SectionCard
-          eyebrow="Implementations"
-          title="Verification-aware library"
-          subtitle="Inspired by `verification-helper`, but designed for daily browsing."
-          action={
-            <div className="library-controls" id="library">
-              <label className="search-input">
-                <span>Search</span>
-                <input
-                  type="search"
-                  value={libraryQuery}
-                  onChange={(event) => setLibraryQuery(event.target.value)}
-                  placeholder="segment tree, flow, source path..."
-                />
-              </label>
+      <main className="workspace">
+        {activeView === "Library" ? (
+          <SectionCard
+            eyebrow="Library"
+            title="Implementations"
+            subtitle="Focus on what is reusable, what is broken, and what still needs proof."
+            action={
+              <div className="section-actions">
+                <label className="search-input">
+                  <span>Search</span>
+                  <input
+                    type="search"
+                    value={libraryQuery}
+                    onChange={(event) => setLibraryQuery(event.target.value)}
+                    placeholder="segment tree, flow, source path..."
+                  />
+                </label>
+              </div>
+            }
+          >
+            <div className="filter-stack">
               <div className="filter-row">
                 {filters.map((filter) => (
                   <button
@@ -155,176 +127,209 @@ export default function App() {
                 ))}
               </div>
             </div>
-          }
-        >
-          <div className="implementation-list">
-            {filteredImplementations.map((item) => (
-              <article key={item.name} className="implementation-card">
-                <div className="implementation-card__header">
+
+            <div className="library-layout">
+              <aside className="side-summary">
+                <h3>How to use this view</h3>
+                <p>Keep only trustworthy snippets in the passing pool. Broken and draft items stay visible so nothing gets forgotten.</p>
+                <div className="side-summary__stats">
                   <div>
-                    <p className="implementation-card__category">{item.category}</p>
-                    <h3>{item.name}</h3>
+                    <span>Shown</span>
+                    <strong>{filteredImplementations.length}</strong>
                   </div>
-                  <StatusPill status={item.status} />
+                  <div>
+                    <span>Total</span>
+                    <strong>{implementations.length}</strong>
+                  </div>
                 </div>
-                <p>{item.summary}</p>
-                <div className="tag-row">
-                  {item.tags.map((tag) => (
-                    <span key={tag} className="tag">
-                      {tag}
-                    </span>
+              </aside>
+
+              <div className="implementation-list">
+                {filteredImplementations.map((item) => (
+                  <article key={item.slug} className="implementation-card">
+                    <div className="implementation-card__header">
+                      <div>
+                        <p className="implementation-card__category">{item.category}</p>
+                        <h3>{item.name}</h3>
+                      </div>
+                      <StatusPill status={item.status} />
+                    </div>
+                    <p>{item.summary}</p>
+                    <div className="tag-row">
+                      {item.tags.map((tag) => (
+                        <span key={tag} className="tag">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="implementation-card__meta">
+                      <div>
+                        <h4>Tests</h4>
+                        <ul>
+                          {item.tests.map((test) => (
+                            <li key={test}>{test}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h4>Used in</h4>
+                        <ul>
+                          {item.linkedProblems.map((problem) => (
+                            <li key={problem}>{problem}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                    {item.note ? <p className="implementation-card__note">{item.note}</p> : null}
+                    <code>{item.source}</code>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </SectionCard>
+        ) : null}
+
+        {activeView === "Notes" ? (
+          <SectionCard
+            eyebrow="Notes"
+            title="Knowledge Vault"
+            subtitle="Markdown for quick capture, LaTeX for formal ideas, PDFs for longer references."
+          >
+            <div className="vault-layout">
+              <aside className="note-list">
+                {notes.map((note) => (
+                  <button
+                    key={note.slug}
+                    type="button"
+                    className={selectedNote.slug === note.slug ? "note-chip note-chip--active" : "note-chip"}
+                    onClick={() => setSelectedNote(note)}
+                  >
+                    <span>{note.title}</span>
+                    <small>
+                      {note.topic} · {note.format}
+                    </small>
+                  </button>
+                ))}
+              </aside>
+
+              <article className="note-viewer">
+                <div className="note-viewer__header">
+                  <div>
+                    <p className="eyebrow">{selectedNote.topic}</p>
+                    <h3>{selectedNote.title}</h3>
+                  </div>
+                  <div className="note-meta">
+                    <span>{selectedNote.format}</span>
+                    <span>Updated {selectedNote.updated}</span>
+                  </div>
+                </div>
+                <p className="note-viewer__summary">{selectedNote.summary}</p>
+                <div className="markdown-body">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedNote.content}</ReactMarkdown>
+                </div>
+                {selectedNote.attachment ? (
+                  <a className="text-link" href={selectedNote.attachment}>
+                    Open attached PDF
+                  </a>
+                ) : null}
+              </article>
+
+              <aside className="reference-panel">
+                <h3>References</h3>
+                <div className="reference-list">
+                  {references.map((reference) => (
+                    <a key={reference.label} className="reference-list__item" href={reference.href} target="_blank" rel="noreferrer">
+                      <strong>{reference.label}</strong>
+                      <span>{reference.description}</span>
+                    </a>
                   ))}
                 </div>
-                <div className="implementation-card__meta">
-                  <div>
-                    <h4>Tests</h4>
-                    <ul>
-                      {item.tests.map((test) => (
-                        <li key={test}>{test}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4>Used in</h4>
-                    <ul>
-                      {item.linkedProblems.map((problem) => (
-                        <li key={problem}>{problem}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                {item.note ? <p className="implementation-card__note">{item.note}</p> : null}
-                <code>{item.source}</code>
-              </article>
-            ))}
-          </div>
-        </SectionCard>
+              </aside>
+            </div>
+          </SectionCard>
+        ) : null}
 
-        <SectionCard
-          eyebrow="Knowledge Vault"
-          title="Notes, PDFs, and scattered ideas"
-          subtitle="Use markdown for quick notes, LaTeX for formal writeups, or attach PDFs for longer references."
-        >
-          <div className="vault-grid" id="vault">
-            <aside className="note-list">
-              {notes.map((note) => (
-                <button
-                  key={note.title}
-                  type="button"
-                  className={selectedNote.title === note.title ? "note-chip note-chip--active" : "note-chip"}
-                  onClick={() => setSelectedNote(note)}
-                >
-                  <span>{note.title}</span>
-                  <small>
-                    {note.topic} · {note.format}
-                  </small>
-                </button>
+        {activeView === "Problems" ? (
+          <SectionCard
+            eyebrow="Problems"
+            title="Problem Journal"
+            subtitle="Keep only the pattern, insight, and linked implementation that you’ll want later."
+            action={
+              <div className="section-actions">
+                <label className="search-input">
+                  <span>Search</span>
+                  <input
+                    type="search"
+                    value={problemQuery}
+                    onChange={(event) => setProblemQuery(event.target.value)}
+                    placeholder="HLD, centroid, DP optimization..."
+                  />
+                </label>
+              </div>
+            }
+          >
+            <div className="problem-list">
+              {filteredProblems.map((problem) => (
+                <article key={problem.slug} className="problem-row">
+                  <div className="problem-row__main">
+                    <p className="problem-card__platform">
+                      {problem.platform} · {problem.difficulty}
+                    </p>
+                    <h3>{problem.title}</h3>
+                    <p className="problem-card__pattern">{problem.pattern}</p>
+                    <p>{problem.takeaway}</p>
+                  </div>
+                  <div className="problem-row__side">
+                    {problem.implementationLinks?.length ? (
+                      <p className="problem-card__links">{problem.implementationLinks.join(", ")}</p>
+                    ) : (
+                      <p className="problem-card__links">No linked implementation yet</p>
+                    )}
+                    <a className="text-link" href={problem.link} target="_blank" rel="noreferrer">
+                      Open problem
+                    </a>
+                  </div>
+                </article>
               ))}
-            </aside>
+            </div>
+          </SectionCard>
+        ) : null}
 
-            <article className="note-viewer">
-              <div className="note-viewer__header">
-                <div>
-                  <p className="eyebrow">{selectedNote.topic}</p>
-                  <h3>{selectedNote.title}</h3>
-                </div>
-                <div className="note-meta">
-                  <span>{selectedNote.format}</span>
-                  <span>Updated {selectedNote.updated}</span>
-                </div>
-              </div>
-              <p className="note-viewer__summary">{selectedNote.summary}</p>
-              <div className="markdown-body">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedNote.content}</ReactMarkdown>
-              </div>
-              {selectedNote.attachment ? (
-                <a className="button button--ghost" href={selectedNote.attachment}>
-                  Open attached PDF
-                </a>
-              ) : null}
-            </article>
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          eyebrow="Problem Journal"
-          title="Cool problems worth remembering"
-          subtitle="Keep the problem, the pattern, and the real lesson together."
-        >
-          <div className="section-toolbar" id="journal">
-            <label className="search-input">
-              <span>Search</span>
-              <input
-                type="search"
-                value={problemQuery}
-                onChange={(event) => setProblemQuery(event.target.value)}
-                placeholder="HLD, centroid, DP optimization..."
-              />
-            </label>
-          </div>
-          <div className="problem-grid">
-            {filteredProblems.map((problem) => (
-              <article key={problem.title} className="problem-card">
-                <p className="problem-card__platform">
-                  {problem.platform} · {problem.difficulty}
-                </p>
-                <h3>{problem.title}</h3>
-                <p className="problem-card__pattern">{problem.pattern}</p>
-                <p>{problem.takeaway}</p>
-                {problem.implementationLinks?.length ? (
-                  <p className="problem-card__links">
-                    Related implementation: {problem.implementationLinks.join(", ")}
-                  </p>
-                ) : null}
-                <a href={problem.link} target="_blank" rel="noreferrer">
-                  Open problem
-                </a>
+        {activeView === "Deploy" ? (
+          <SectionCard
+            eyebrow="Deploy"
+            title="GitHub workflow"
+            subtitle="The repo is already configured for GitHub Pages via Actions."
+          >
+            <div className="deploy-layout">
+              <article className="plain-card">
+                <h3>One-time setup</h3>
+                <ol>
+                  <li>Create an empty GitHub repository.</li>
+                  <li>Push your local `main` branch to that repo.</li>
+                  <li>Open `Settings` to `Pages` and choose `GitHub Actions`.</li>
+                  <li>Every later push to `main` will rebuild and deploy automatically.</li>
+                </ol>
               </article>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          eyebrow="Reference Shelf"
-          title="External anchors"
-          subtitle="A few high-value links that keep the system connected to the broader CP ecosystem."
-        >
-          <div className="reference-grid">
-            {references.map((reference) => (
-              <a key={reference.label} className="reference-card" href={reference.href} target="_blank" rel="noreferrer">
-                <h3>{reference.label}</h3>
-                <p>{reference.description}</p>
-              </a>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          eyebrow="Deploy"
-          title="How this goes live on GitHub"
-          subtitle="The repo is already wired for GitHub Pages through Actions."
-        >
-          <div className="deploy-grid" id="deploy">
-            <article className="overview-grid__single">
-              <h3>What you do on GitHub</h3>
-              <ol>
-                <li>Create an empty GitHub repository.</li>
-                <li>Add it as `origin` from your machine and push the `main` branch.</li>
-                <li>Open repository settings and make sure Pages uses GitHub Actions.</li>
-                <li>Every push to `main` will rebuild and deploy this site automatically.</li>
-              </ol>
-            </article>
-            <article className="overview-grid__single">
-              <h3>What is already implemented here</h3>
-              <ol>
-                <li>Static Vite build configured for GitHub Pages-safe asset paths.</li>
-                <li>Deployment workflow in `.github/workflows/deploy.yml`.</li>
-                <li>Content structure that keeps notes and references repo-native.</li>
-                <li>Room to add verification ingestion without rewriting the UI.</li>
-              </ol>
-            </article>
-          </div>
-        </SectionCard>
+              <article className="plain-card">
+                <h3>Useful commands</h3>
+                <pre className="code-block">
+                  <code>{`git add .
+git commit -m "Update CP knowledge hub"
+git push`}</code>
+                </pre>
+              </article>
+              <article className="plain-card">
+                <h3>About the GitHub warning</h3>
+                <p>
+                  The Node 20 warning is from GitHub-hosted actions deprecating their runtime. Your deployment still
+                  works. We can update the workflow later when GitHub or the action maintainers publish the preferred
+                  Node 24 path.
+                </p>
+              </article>
+            </div>
+          </SectionCard>
+        ) : null}
       </main>
     </div>
   );
