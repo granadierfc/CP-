@@ -1,0 +1,514 @@
+:root {
+  font-family: "Sora", "Space Grotesk", system-ui, sans-serif;
+  color: #f5f0e8;
+  background:
+    radial-gradient(circle at top left, rgba(222, 145, 72, 0.28), transparent 26%),
+    radial-gradient(circle at top right, rgba(72, 130, 222, 0.2), transparent 24%),
+    linear-gradient(180deg, #16171d 0%, #0d1016 100%);
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --surface: rgba(21, 24, 32, 0.82);
+  --surface-strong: rgba(26, 31, 42, 0.95);
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #ffb15a;
+  --accent-soft: rgba(255, 177, 90, 0.12);
+  --blue: #87b7ff;
+  --green: #88d7a2;
+  --red: #ff8c8c;
+  --muted: #b8c0d0;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+code {
+  font-family: "JetBrains Mono", "SFMono-Regular", monospace;
+  color: #ffd7a9;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 64px;
+}
+
+.top-nav {
+  position: sticky;
+  top: 12px;
+  z-index: 20;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  background: rgba(14, 17, 24, 0.72);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+}
+
+.top-nav a {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.35fr 0.95fr;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.hero__copy,
+.hero__panel,
+.section-card {
+  background: var(--surface);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+.hero__copy {
+  padding: 40px;
+}
+
+.hero__panel {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: clamp(2.7rem, 6vw, 4.6rem);
+  line-height: 0.98;
+  margin-bottom: 18px;
+  max-width: 12ch;
+}
+
+.hero__body,
+.section-card__subtitle,
+.note-viewer__summary,
+.problem-card p,
+.reference-card p,
+.implementation-card p,
+.overview-grid p {
+  color: var(--muted);
+}
+
+.hero__cta-row,
+.filter-row,
+.tag-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.library-controls,
+.section-toolbar {
+  display: grid;
+  gap: 12px;
+}
+
+.button,
+.chip,
+.note-chip {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+}
+
+.button:hover,
+.chip:hover,
+.note-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.button--primary {
+  background: linear-gradient(135deg, #ffb15a, #ff7b55);
+  color: #12141b;
+  font-weight: 700;
+}
+
+.button--ghost,
+.chip,
+.note-chip {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.metric-grid,
+.overview-grid,
+.problem-grid,
+.reference-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.metric-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metric-grid article,
+.overview-grid article,
+.problem-card,
+.reference-card,
+.implementation-card,
+.note-viewer,
+.note-list,
+.hero__callout {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+}
+
+.metric-grid article {
+  padding: 20px;
+}
+
+.metric-grid span {
+  color: var(--muted);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.metric-grid strong {
+  font-size: 2.1rem;
+}
+
+.hero__callout {
+  padding: 20px 22px;
+}
+
+.hero__callout p {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.page-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.section-card {
+  padding: 28px;
+}
+
+.section-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.overview-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.overview-grid__single {
+  padding: 22px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+}
+
+.overview-grid article,
+.problem-card,
+.reference-card {
+  padding: 22px;
+}
+
+.implementation-list {
+  display: grid;
+  gap: 16px;
+}
+
+.implementation-card {
+  padding: 24px;
+}
+
+.implementation-card__note,
+.problem-card__links {
+  color: #d8c3a0;
+}
+
+.implementation-card__header,
+.note-viewer__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.implementation-card__category,
+.problem-card__platform {
+  color: var(--accent);
+  font-size: 0.86rem;
+}
+
+.implementation-card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 18px 0;
+}
+
+.implementation-card ul,
+.hero__callout ul {
+  padding-left: 18px;
+  margin-bottom: 0;
+}
+
+.tag {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: #ffd9ad;
+  font-size: 0.85rem;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.status-pill--passing {
+  background: rgba(136, 215, 162, 0.16);
+  color: var(--green);
+}
+
+.status-pill--failing {
+  background: rgba(255, 140, 140, 0.14);
+  color: var(--red);
+}
+
+.status-pill--draft {
+  background: rgba(135, 183, 255, 0.14);
+  color: var(--blue);
+}
+
+.chip,
+.note-chip {
+  border: 1px solid var(--border);
+  color: inherit;
+  cursor: pointer;
+}
+
+.chip {
+  padding: 9px 14px;
+  cursor: pointer;
+}
+
+.chip--active,
+.note-chip--active {
+  background: rgba(255, 177, 90, 0.16);
+  border-color: rgba(255, 177, 90, 0.5);
+}
+
+.vault-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.search-input {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.search-input input {
+  width: min(100%, 360px);
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  outline: none;
+}
+
+.search-input input:focus {
+  border-color: rgba(255, 177, 90, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 177, 90, 0.08);
+}
+
+.note-list {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.note-chip {
+  padding: 14px;
+  text-align: left;
+}
+
+.note-chip span,
+.note-chip small {
+  display: block;
+}
+
+.note-chip small,
+.note-meta {
+  color: var(--muted);
+}
+
+.note-viewer {
+  padding: 24px;
+}
+
+.note-meta {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  font-size: 0.92rem;
+}
+
+.markdown-body h2 {
+  margin-top: 24px;
+  margin-bottom: 10px;
+}
+
+.markdown-body ul {
+  padding-left: 18px;
+}
+
+.problem-grid,
+.reference-grid,
+.deploy-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.deploy-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.deploy-grid ol {
+  margin-bottom: 0;
+  padding-left: 18px;
+}
+
+.problem-card__pattern {
+  color: #e8d3b0;
+  font-weight: 600;
+}
+
+.problem-card a,
+.reference-card {
+  color: #a8cbff;
+}
+
+@media (max-width: 1024px) {
+  .hero,
+  .vault-grid,
+  .overview-grid,
+  .problem-grid,
+  .reference-grid,
+  .deploy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-card__header,
+  .implementation-card__header,
+  .note-viewer__header {
+    flex-direction: column;
+  }
+
+  .note-meta {
+    justify-items: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 20px, 1200px);
+    padding-top: 20px;
+  }
+
+  .top-nav {
+    top: 8px;
+  }
+
+  .hero__copy,
+  .hero__panel,
+  .section-card,
+  .implementation-card,
+  .note-viewer {
+    padding: 20px;
+  }
+
+  h1 {
+    max-width: none;
+    font-size: 2.5rem;
+  }
+
+  .metric-grid,
+  .implementation-card__meta {
+    grid-template-columns: 1fr;
+  }
+}
