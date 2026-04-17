@@ -4,8 +4,8 @@ A GitHub-friendly static web app for organizing competitive programming work in 
 
 - implementations and verification status
 - notes in markdown / LaTeX / PDF-backed form
-- cool problem writeups and pattern recall
-- references to useful external resources
+- a compact journal of problems worth remembering
+- a calm, sidebar-first interface instead of a crowded dashboard
 
 ## Why this shape
 
@@ -30,11 +30,11 @@ The app is configured with `base: "./"` in [vite.config.ts](/Users/pushpraj/Desk
 
 - Implementation metadata lives in [library.ts](/Users/pushpraj/Desktop/CP/src/content/library.ts)
 - Problem metadata lives in [problems.ts](/Users/pushpraj/Desktop/CP/src/content/problems.ts)
-- Notes live in [src/content/notes](/Users/pushpraj/Desktop/CP/src/content/notes) as actual markdown files
+- Notes live in [src/content/notes](/Users/pushpraj/Desktop/CP/src/content/notes)
 - External references live in [references.ts](/Users/pushpraj/Desktop/CP/src/content/references.ts)
 - Shared content types live in [types.ts](/Users/pushpraj/Desktop/CP/src/content/types.ts)
 
-This keeps the UI layer separate from the knowledge base, which will matter once we start generating some of this content automatically.
+The repository starts intentionally sparse. The UI is built to look good with real content and to stay restrained when the lists are still empty.
 
 ## Where to customize
 
@@ -46,10 +46,10 @@ This keeps the UI layer separate from the knowledge base, which will matter once
 ## Suggested repo workflow
 
 1. Keep implementations in your actual library folders and mirror metadata in `src/content/library.ts`.
-2. Store short notes as markdown in `src/content/notes/`.
+2. Store short notes as markdown or index them through `src/content/notes/`.
 3. Put longer PDFs in `public/references/` and link them from the content model.
-4. When you create the GitHub repo, push this project and enable GitHub Pages from Actions.
-5. Later, we can automate verification status ingestion from `verification-helper`.
+4. Push the repo and let GitHub Pages deploy via Actions.
+5. Later, automate verification status ingestion from `verification-helper`.
 
 ## Deploy on GitHub
 

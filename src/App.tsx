@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { SectionCard } from "./components/SectionCard";
 import { StatusPill } from "./components/StatusPill";
 import {
   implementations,
@@ -14,321 +13,354 @@ import {
   statusSummary
 } from "./data/content";
 
-const filters = ["All", "passing", "failing", "draft"] as const;
-const views = ["Library", "Notes", "Problems", "Deploy"] as const;
+const libraryFilters = ["All", "passing", "failing", "draft"] as const;
+const views = ["Library", "Notes", "Problems"] as const;
 
 type View = (typeof views)[number];
 
+function EmptyState({
+  title,
+  body,
+  hint
+}: {
+  title: string;
+  body: string;
+  hint: string;
+}) {
+  return (
+    <div className="empty-state">
+      <h3>{title}</h3>
+      <p>{body}</p>
+      <code>{hint}</code>
+    </div>
+  );
+}
+
 export default function App() {
   const [activeView, setActiveView] = useState<View>("Library");
-  const [activeStatus, setActiveStatus] = useState<(typeof filters)[number]>("All");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeStatus, setActiveStatus] = useState<(typeof libraryFilters)[number]>("All");
+  const [activeSection, setActiveSection] = useState("All");
   const [libraryQuery, setLibraryQuery] = useState("");
   const [problemQuery, setProblemQuery] = useState("");
-  const [selectedNote, setSelectedNote] = useState(notes[0]);
+  const [selectedImplementationSlug, setSelectedImplementationSlug] = useState<string | null>(
+    implementations[0]?.slug ?? null
+  );
+  const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(notes[0]?.slug ?? null);
+  const [selectedProblemSlug, setSelectedProblemSlug] = useState<string | null>(problems[0]?.slug ?? null);
 
   const filteredImplementations = implementations.filter((item) => {
     const statusMatch = activeStatus === "All" || item.status === activeStatus;
-    const categoryMatch = activeCategory === "All" || item.category === activeCategory;
+    const sectionMatch = activeSection === "All" || item.section === activeSection;
     const queryMatch = libraryQuery.trim() === "" || matchesImplementationQuery(item, libraryQuery);
-    return statusMatch && categoryMatch && queryMatch;
+    return statusMatch && sectionMatch && queryMatch;
   });
 
   const filteredProblems = problems.filter((problem) => {
     return problemQuery.trim() === "" || matchesProblemQuery(problem, problemQuery);
   });
 
+  const selectedImplementation =
+    filteredImplementations.find((item) => item.slug === selectedImplementationSlug) ??
+    filteredImplementations[0] ??
+    null;
+  const selectedNote = notes.find((note) => note.slug === selectedNoteSlug) ?? notes[0] ?? null;
+  const selectedProblem =
+    filteredProblems.find((problem) => problem.slug === selectedProblemSlug) ??
+    filteredProblems[0] ??
+    null;
+
+  useEffect(() => {
+    setSelectedImplementationSlug(filteredImplementations[0]?.slug ?? null);
+  }, [activeStatus, activeSection, libraryQuery]);
+
+  useEffect(() => {
+    setSelectedProblemSlug(filteredProblems[0]?.slug ?? null);
+  }, [problemQuery]);
+
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <div>
-          <p className="eyebrow">Competitive Programming Workspace</p>
-          <h1>CP Knowledge Hub</h1>
-          <p className="app-header__body">
-            A quieter personal system for library code, notes, solved problems, and deployment.
+      <aside className="sidebar">
+        <div className="sidebar__brand">
+          <p className="eyebrow">Competitive Programming</p>
+          <h1>Knowledge Hub</h1>
+          <p className="sidebar__intro">
+            A quiet place for code you trust, notes you want to revisit, and problems worth remembering.
           </p>
         </div>
-        <div className="summary-strip">
-          <article>
-            <span>Passing</span>
-            <strong>{statusSummary.passing}</strong>
-          </article>
-          <article>
-            <span>Failing</span>
-            <strong>{statusSummary.failing}</strong>
-          </article>
-          <article>
-            <span>Drafts</span>
-            <strong>{statusSummary.draft}</strong>
-          </article>
-          <article>
-            <span>Notes</span>
-            <strong>{notes.length}</strong>
-          </article>
-        </div>
-      </header>
 
-      <nav className="view-switcher" aria-label="Workspace sections">
-        {views.map((view) => (
-          <button
-            key={view}
-            type="button"
-            className={view === activeView ? "view-switcher__tab view-switcher__tab--active" : "view-switcher__tab"}
-            onClick={() => setActiveView(view)}
-          >
-            {view}
-          </button>
-        ))}
-      </nav>
+        <nav className="sidebar__nav" aria-label="Primary">
+          {views.map((view) => (
+            <button
+              key={view}
+              type="button"
+              className={view === activeView ? "sidebar__nav-item sidebar__nav-item--active" : "sidebar__nav-item"}
+              onClick={() => setActiveView(view)}
+            >
+              <span>{view}</span>
+              <small>
+                {view === "Library" ? implementations.length : view === "Notes" ? notes.length : problems.length}
+              </small>
+            </button>
+          ))}
+        </nav>
 
-      <main className="workspace">
+        <section className="sidebar__panel">
+          <h2>Overview</h2>
+          <dl className="sidebar__stats">
+            <div>
+              <dt>Passing</dt>
+              <dd>{statusSummary.passing}</dd>
+            </div>
+            <div>
+              <dt>Failing</dt>
+              <dd>{statusSummary.failing}</dd>
+            </div>
+            <div>
+              <dt>Drafts</dt>
+              <dd>{statusSummary.draft}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="sidebar__panel">
+          <h2>References</h2>
+          <div className="sidebar__links">
+            {references.map((reference) => (
+              <a key={reference.label} href={reference.href} target="_blank" rel="noreferrer">
+                <strong>{reference.label}</strong>
+                <span>{reference.description}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      </aside>
+
+      <main className="main-pane">
         {activeView === "Library" ? (
-          <SectionCard
-            eyebrow="Library"
-            title="Implementations"
-            subtitle="Focus on what is reusable, what is broken, and what still needs proof."
-            action={
-              <div className="section-actions">
-                <label className="search-input">
-                  <span>Search</span>
-                  <input
-                    type="search"
-                    value={libraryQuery}
-                    onChange={(event) => setLibraryQuery(event.target.value)}
-                    placeholder="segment tree, flow, source path..."
-                  />
-                </label>
+          <section className="workspace-panel">
+            <header className="workspace-panel__header">
+              <div>
+                <p className="eyebrow">Library</p>
+                <h2>Implementations</h2>
+                <p className="workspace-panel__subtitle">
+                  Keep this view spare: name, status, path, and the one note that matters.
+                </p>
               </div>
-            }
-          >
-            <div className="filter-stack">
-              <div className="filter-row">
-                {filters.map((filter) => (
-                  <button
-                    key={filter}
-                    type="button"
-                    className={filter === activeStatus ? "chip chip--active" : "chip"}
-                    onClick={() => setActiveStatus(filter)}
-                  >
-                    {filter}
-                  </button>
-                ))}
-              </div>
-              <div className="filter-row">
-                {libraryCategories.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    className={category === activeCategory ? "chip chip--active" : "chip"}
-                    onClick={() => setActiveCategory(category)}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
+              <label className="search-input">
+                <span>Search</span>
+                <input
+                  type="search"
+                  value={libraryQuery}
+                  onChange={(event) => setLibraryQuery(event.target.value)}
+                  placeholder="search by name or path"
+                />
+              </label>
+            </header>
+
+            <div className="filter-bar">
+              {libraryFilters.map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  className={filter === activeStatus ? "chip chip--active" : "chip"}
+                  onClick={() => setActiveStatus(filter)}
+                >
+                  {filter}
+                </button>
+              ))}
             </div>
 
-            <div className="library-layout">
-              <aside className="side-summary">
-                <h3>How to use this view</h3>
-                <p>Keep only trustworthy snippets in the passing pool. Broken and draft items stay visible so nothing gets forgotten.</p>
-                <div className="side-summary__stats">
-                  <div>
-                    <span>Shown</span>
-                    <strong>{filteredImplementations.length}</strong>
-                  </div>
-                  <div>
-                    <span>Total</span>
-                    <strong>{implementations.length}</strong>
-                  </div>
+            <div className="filter-bar">
+              {libraryCategories.map((section) => (
+                <button
+                  key={section}
+                  type="button"
+                  className={section === activeSection ? "chip chip--active" : "chip"}
+                  onClick={() => setActiveSection(section)}
+                >
+                  {section}
+                </button>
+              ))}
+            </div>
+
+            {filteredImplementations.length === 0 ? (
+              <EmptyState
+                title="No implementations yet"
+                body="Add your first implementation entry when you are ready. This space is intentionally calm until real content arrives."
+                hint="src/content/library.ts"
+              />
+            ) : (
+              <div className="two-pane">
+                <div className="list-pane">
+                  {filteredImplementations.map((item) => (
+                    <button
+                      key={item.slug}
+                      type="button"
+                      className={
+                        item.slug === selectedImplementation?.slug ? "list-item list-item--active" : "list-item"
+                      }
+                      onClick={() => setSelectedImplementationSlug(item.slug)}
+                    >
+                      <div className="list-item__top">
+                        <strong>{item.name}</strong>
+                        <StatusPill status={item.status} />
+                      </div>
+                      <span>{item.section}</span>
+                    </button>
+                  ))}
                 </div>
-              </aside>
 
-              <div className="implementation-list">
-                {filteredImplementations.map((item) => (
-                  <article key={item.slug} className="implementation-card">
-                    <div className="implementation-card__header">
-                      <div>
-                        <p className="implementation-card__category">{item.category}</p>
-                        <h3>{item.name}</h3>
-                      </div>
-                      <StatusPill status={item.status} />
+                <article className="detail-pane">
+                  <p className="detail-pane__label">{selectedImplementation?.section}</p>
+                  <h3>{selectedImplementation?.name}</h3>
+                  <p>{selectedImplementation?.summary}</p>
+                  <dl className="detail-list">
+                    <div>
+                      <dt>Source</dt>
+                      <dd>
+                        <code>{selectedImplementation?.source}</code>
+                      </dd>
                     </div>
-                    <p>{item.summary}</p>
-                    <div className="tag-row">
-                      {item.tags.map((tag) => (
-                        <span key={tag} className="tag">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="implementation-card__meta">
+                    {selectedImplementation?.verification?.length ? (
                       <div>
-                        <h4>Tests</h4>
-                        <ul>
-                          {item.tests.map((test) => (
-                            <li key={test}>{test}</li>
-                          ))}
-                        </ul>
+                        <dt>Verification</dt>
+                        <dd>{selectedImplementation.verification.join(", ")}</dd>
                       </div>
+                    ) : null}
+                    {selectedImplementation?.note ? (
                       <div>
-                        <h4>Used in</h4>
-                        <ul>
-                          {item.linkedProblems.map((problem) => (
-                            <li key={problem}>{problem}</li>
-                          ))}
-                        </ul>
+                        <dt>Note</dt>
+                        <dd>{selectedImplementation.note}</dd>
                       </div>
-                    </div>
-                    {item.note ? <p className="implementation-card__note">{item.note}</p> : null}
-                    <code>{item.source}</code>
-                  </article>
-                ))}
+                    ) : null}
+                  </dl>
+                </article>
               </div>
-            </div>
-          </SectionCard>
+            )}
+          </section>
         ) : null}
 
         {activeView === "Notes" ? (
-          <SectionCard
-            eyebrow="Notes"
-            title="Knowledge Vault"
-            subtitle="Markdown for quick capture, LaTeX for formal ideas, PDFs for longer references."
-          >
-            <div className="vault-layout">
-              <aside className="note-list">
-                {notes.map((note) => (
-                  <button
-                    key={note.slug}
-                    type="button"
-                    className={selectedNote.slug === note.slug ? "note-chip note-chip--active" : "note-chip"}
-                    onClick={() => setSelectedNote(note)}
-                  >
-                    <span>{note.title}</span>
-                    <small>
-                      {note.topic} · {note.format}
-                    </small>
-                  </button>
-                ))}
-              </aside>
+          <section className="workspace-panel">
+            <header className="workspace-panel__header">
+              <div>
+                <p className="eyebrow">Notes</p>
+                <h2>Notebook</h2>
+                <p className="workspace-panel__subtitle">
+                  Inspired by simple academic sites: just a list of notes and a page to read.
+                </p>
+              </div>
+            </header>
 
-              <article className="note-viewer">
-                <div className="note-viewer__header">
-                  <div>
-                    <p className="eyebrow">{selectedNote.topic}</p>
-                    <h3>{selectedNote.title}</h3>
-                  </div>
-                  <div className="note-meta">
-                    <span>{selectedNote.format}</span>
-                    <span>Updated {selectedNote.updated}</span>
-                  </div>
-                </div>
-                <p className="note-viewer__summary">{selectedNote.summary}</p>
-                <div className="markdown-body">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedNote.content}</ReactMarkdown>
-                </div>
-                {selectedNote.attachment ? (
-                  <a className="text-link" href={selectedNote.attachment}>
-                    Open attached PDF
-                  </a>
-                ) : null}
-              </article>
-
-              <aside className="reference-panel">
-                <h3>References</h3>
-                <div className="reference-list">
-                  {references.map((reference) => (
-                    <a key={reference.label} className="reference-list__item" href={reference.href} target="_blank" rel="noreferrer">
-                      <strong>{reference.label}</strong>
-                      <span>{reference.description}</span>
-                    </a>
+            {notes.length === 0 ? (
+              <EmptyState
+                title="No notes yet"
+                body="Place markdown or PDF-backed note entries here as you build the archive."
+                hint="src/content/notes/index.ts"
+              />
+            ) : (
+              <div className="two-pane">
+                <div className="list-pane">
+                  {notes.map((note) => (
+                    <button
+                      key={note.slug}
+                      type="button"
+                      className={note.slug === selectedNote?.slug ? "list-item list-item--active" : "list-item"}
+                      onClick={() => setSelectedNoteSlug(note.slug)}
+                    >
+                      <strong>{note.title}</strong>
+                      <span>
+                        {note.topic} · {note.updated}
+                      </span>
+                    </button>
                   ))}
                 </div>
-              </aside>
-            </div>
-          </SectionCard>
+
+                <article className="detail-pane detail-pane--prose">
+                  <p className="detail-pane__label">{selectedNote?.topic}</p>
+                  <h3>{selectedNote?.title}</h3>
+                  <p>{selectedNote?.summary}</p>
+                  <div className="markdown-body">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedNote?.content ?? ""}</ReactMarkdown>
+                  </div>
+                  {selectedNote?.attachment ? (
+                    <a className="text-link" href={selectedNote.attachment}>
+                      Open attachment
+                    </a>
+                  ) : null}
+                </article>
+              </div>
+            )}
+          </section>
         ) : null}
 
         {activeView === "Problems" ? (
-          <SectionCard
-            eyebrow="Problems"
-            title="Problem Journal"
-            subtitle="Keep only the pattern, insight, and linked implementation that you’ll want later."
-            action={
-              <div className="section-actions">
-                <label className="search-input">
-                  <span>Search</span>
-                  <input
-                    type="search"
-                    value={problemQuery}
-                    onChange={(event) => setProblemQuery(event.target.value)}
-                    placeholder="HLD, centroid, DP optimization..."
-                  />
-                </label>
-              </div>
-            }
-          >
-            <div className="problem-list">
-              {filteredProblems.map((problem) => (
-                <article key={problem.slug} className="problem-row">
-                  <div className="problem-row__main">
-                    <p className="problem-card__platform">
-                      {problem.platform} · {problem.difficulty}
-                    </p>
-                    <h3>{problem.title}</h3>
-                    <p className="problem-card__pattern">{problem.pattern}</p>
-                    <p>{problem.takeaway}</p>
-                  </div>
-                  <div className="problem-row__side">
-                    {problem.implementationLinks?.length ? (
-                      <p className="problem-card__links">{problem.implementationLinks.join(", ")}</p>
-                    ) : (
-                      <p className="problem-card__links">No linked implementation yet</p>
-                    )}
-                    <a className="text-link" href={problem.link} target="_blank" rel="noreferrer">
-                      Open problem
-                    </a>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </SectionCard>
-        ) : null}
-
-        {activeView === "Deploy" ? (
-          <SectionCard
-            eyebrow="Deploy"
-            title="GitHub workflow"
-            subtitle="The repo is already configured for GitHub Pages via Actions."
-          >
-            <div className="deploy-layout">
-              <article className="plain-card">
-                <h3>One-time setup</h3>
-                <ol>
-                  <li>Create an empty GitHub repository.</li>
-                  <li>Push your local `main` branch to that repo.</li>
-                  <li>Open `Settings` to `Pages` and choose `GitHub Actions`.</li>
-                  <li>Every later push to `main` will rebuild and deploy automatically.</li>
-                </ol>
-              </article>
-              <article className="plain-card">
-                <h3>Useful commands</h3>
-                <pre className="code-block">
-                  <code>{`git add .
-git commit -m "Update CP knowledge hub"
-git push`}</code>
-                </pre>
-              </article>
-              <article className="plain-card">
-                <h3>About the GitHub warning</h3>
-                <p>
-                  The Node 20 warning is from GitHub-hosted actions deprecating their runtime. Your deployment still
-                  works. We can update the workflow later when GitHub or the action maintainers publish the preferred
-                  Node 24 path.
+          <section className="workspace-panel">
+            <header className="workspace-panel__header">
+              <div>
+                <p className="eyebrow">Problems</p>
+                <h2>Journal</h2>
+                <p className="workspace-panel__subtitle">
+                  Store only the source, the lesson, and maybe a writeup link. Nothing more unless it earns the space.
                 </p>
-              </article>
-            </div>
-          </SectionCard>
+              </div>
+              <label className="search-input">
+                <span>Search</span>
+                <input
+                  type="search"
+                  value={problemQuery}
+                  onChange={(event) => setProblemQuery(event.target.value)}
+                  placeholder="search by title or lesson"
+                />
+              </label>
+            </header>
+
+            {filteredProblems.length === 0 ? (
+              <EmptyState
+                title="No problems yet"
+                body="Add only the problems you genuinely want to remember, not every solved problem."
+                hint="src/content/problems.ts"
+              />
+            ) : (
+              <div className="two-pane">
+                <div className="list-pane">
+                  {filteredProblems.map((problem) => (
+                    <button
+                      key={problem.slug}
+                      type="button"
+                      className={problem.slug === selectedProblem?.slug ? "list-item list-item--active" : "list-item"}
+                      onClick={() => setSelectedProblemSlug(problem.slug)}
+                    >
+                      <strong>{problem.title}</strong>
+                      <span>{problem.source}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <article className="detail-pane">
+                  <p className="detail-pane__label">{selectedProblem?.source}</p>
+                  <h3>{selectedProblem?.title}</h3>
+                  <dl className="detail-list">
+                    <div>
+                      <dt>Lesson</dt>
+                      <dd>{selectedProblem?.lesson}</dd>
+                    </div>
+                    {selectedProblem?.writeup ? (
+                      <div>
+                        <dt>Writeup</dt>
+                        <dd>{selectedProblem.writeup}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  {selectedProblem?.link ? (
+                    <a className="text-link" href={selectedProblem.link} target="_blank" rel="noreferrer">
+                      Open original problem
+                    </a>
+                  ) : null}
+                </article>
+              </div>
+            )}
+          </section>
         ) : null}
       </main>
     </div>

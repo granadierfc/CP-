@@ -5,7 +5,7 @@ import { references } from "../content/references";
 
 export { implementations, notes, problems, references };
 
-export const libraryCategories = ["All", ...new Set(implementations.map((item) => item.category))];
+export const libraryCategories = ["All", ...new Set(implementations.map((item) => item.section))];
 
 export const statusSummary = {
   passing: implementations.filter((item) => item.status === "passing").length,
@@ -19,13 +19,11 @@ export function matchesImplementationQuery(
 ) {
   const haystack = [
     implementation.name,
-    implementation.category,
+    implementation.section,
     implementation.summary,
     implementation.source,
     implementation.note ?? "",
-    ...implementation.tags,
-    ...implementation.tests,
-    ...implementation.linkedProblems
+    ...(implementation.verification ?? [])
   ]
     .join(" ")
     .toLowerCase();
@@ -34,9 +32,7 @@ export function matchesImplementationQuery(
 }
 
 export function matchesProblemQuery(problem: (typeof problems)[number], query: string) {
-  const haystack = [problem.title, problem.platform, problem.pattern, problem.takeaway]
-    .join(" ")
-    .toLowerCase();
+  const haystack = [problem.title, problem.source, problem.lesson, problem.writeup ?? ""].join(" ").toLowerCase();
 
   return haystack.includes(query.toLowerCase());
 }

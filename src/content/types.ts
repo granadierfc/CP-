@@ -3,13 +3,11 @@ export type VerificationStatus = "passing" | "failing" | "draft";
 export type Implementation = {
   slug: string;
   name: string;
-  category: string;
+  section: string;
   status: VerificationStatus;
   summary: string;
-  tags: string[];
-  tests: string[];
   source: string;
-  linkedProblems: string[];
+  verification?: string[];
   note?: string;
 };
 
@@ -27,12 +25,10 @@ export type Note = {
 export type ProblemEntry = {
   slug: string;
   title: string;
-  platform: string;
-  difficulty: string;
-  pattern: string;
-  takeaway: string;
-  link: string;
-  implementationLinks?: string[];
+  source: string;
+  lesson: string;
+  writeup?: string;
+  link?: string;
 };
 
 export type Reference = {
